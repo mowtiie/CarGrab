@@ -24,11 +24,13 @@ import com.codefellas.cargrab.data.Driver;
 import com.codefellas.cargrab.data.Passenger;
 import com.codefellas.cargrab.databinding.ActivityLoginBinding;
 import com.codefellas.cargrab.util.NotificationUtil;
+import com.codefellas.cargrab.util.PreferenceUtil;
 
 public class LoginActivity extends AppCompatActivity {
 
     private ActivityLoginBinding binding;
     private Database database;
+    private PreferenceUtil pref;
 
     private final ActivityResultLauncher<String> requestNotificationPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -52,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         database = new Database(this);
+        pref = new PreferenceUtil(this);
         NotificationUtil.createChannels(this);
         requestionNotificationPermission();
 
@@ -81,6 +84,8 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     Toast.makeText(this, "Logged in as passenger", Toast.LENGTH_SHORT).show();
+                    pref.setRole(selectedRole);
+                    pref.setAccountID(loginPassenger.getPassengerID());
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finish();
                     break;
@@ -94,12 +99,15 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     Toast.makeText(this, "Logged in as driver", Toast.LENGTH_SHORT).show();
+                    pref.setRole(selectedRole);
+                    pref.setAccountID(loginDriver.getDriverID());
                     startActivity(new Intent(LoginActivity.this, DriverActivity.class));
                     finish();
                     break;
                 case "Admin":
                     if (email.equals("admin01@gmail.com") && password.equals("adminpassword")) {
                         Toast.makeText(this, "Logged in as admin", Toast.LENGTH_SHORT).show();
+                        pref.setRole(selectedRole);
                         startActivity(new Intent(LoginActivity.this, AdminActivity.class));
                         finish();
                     }

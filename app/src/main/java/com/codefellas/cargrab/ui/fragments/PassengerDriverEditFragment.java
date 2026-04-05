@@ -1,66 +1,88 @@
 package com.codefellas.cargrab.ui.fragments;
 
+import android.accounts.Account;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.preference.Preference;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.codefellas.cargrab.R;
+import com.codefellas.cargrab.data.Database;
+import com.codefellas.cargrab.data.Driver;
+import com.codefellas.cargrab.data.Passenger;
+import com.codefellas.cargrab.databinding.FragmentPassengerDriverEditBinding;
+import com.codefellas.cargrab.util.PreferenceUtil;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link PassengerDriverEditFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class PassengerDriverEditFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    FragmentPassengerDriverEditBinding binding;
+    PreferenceUtil pref;
+    Database database;
 
     public PassengerDriverEditFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment PassengerDriverEditFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PassengerDriverEditFragment newInstance(String param1, String param2) {
-        PassengerDriverEditFragment fragment = new PassengerDriverEditFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_passenger_driver_edit, container, false);
+        binding =  FragmentPassengerDriverEditBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        pref = new PreferenceUtil(requireContext());
+        database = new Database(requireContext());
+
+        if (pref.getRole().equals("Passenger")) {
+            Passenger passenger = database.getPassengerByID(pref.getAccountID());
+            setPassengerDetails(passenger);
+        }
+        else if (pref.getRole().equals("Driver")) {
+            //TODO: Dapat pala ibang fragment pag driver kase ibang laman
+        }
+
+        binding.saveButton.setOnClickListener(v -> {
+            if (binding.password.getText().toString()
+                    .equals(binding.confirmPassword.getText().toString()))
+                savePassengerDetails();
+            else Toast.makeText(requireContext(), "Passwords do not match!", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void setPassengerDetails(Passenger account) {
+        binding.passengerFirstName.setText(account.getFirstName());
+        binding.passengerMiddleName.setText(account.getMiddleName());
+        binding.passengerLastName.setText(account.getLastName());
+        binding.passengerEmail.setText(account.getEmail());
+        binding.contactNum.setText(account.getPhone());
+        binding.password.setText(account.getPassword());
+    }
+
+    private void savePassengerDetails() {
+        String fName = binding.passengerFirstName.getText().toString();
+        String mName = binding.passengerMiddleName.getText().toString();
+        String lName = binding.passengerLastName.getText().toString();
+        String email = binding.passengerEmail.getText().toString();
+        String password = binding.password.getText().toString();
+        String phone = binding.contactNum.getText().toString();
+        
+        database.editPassenger(pref.getAccountID(), fName, mName, lName, email, password, phone);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

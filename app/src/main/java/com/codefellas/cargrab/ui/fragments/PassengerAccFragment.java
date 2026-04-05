@@ -1,66 +1,72 @@
 package com.codefellas.cargrab.ui.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.preference.Preference;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.codefellas.cargrab.R;
+import com.codefellas.cargrab.data.Database;
+import com.codefellas.cargrab.data.Passenger;
+import com.codefellas.cargrab.databinding.FragmentPassengerAccBinding;
+import com.codefellas.cargrab.ui.activities.LoginActivity;
+import com.codefellas.cargrab.util.PreferenceUtil;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link PassengerAccFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class PassengerAccFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    FragmentPassengerAccBinding binding;
+    PreferenceUtil pref;
+    Database database;
 
     public PassengerAccFragment() {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment PassengerAccFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static PassengerAccFragment newInstance(String param1, String param2) {
-        PassengerAccFragment fragment = new PassengerAccFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_passenger_acc, container, false);
+        binding = FragmentPassengerAccBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        pref = new PreferenceUtil(requireContext());
+        database = new Database(requireContext());
+        System.out.println("Account ID sa pref util: " + pref.getAccountID());
+        System.out.println("Check if nagana get passenger: " + database.getPassengerByID(pref.getAccountID()).getFirstName());
+        setDetails(database.getPassengerByID(pref.getAccountID()));
+        binding.editButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frame_layout, new PassengerDriverEditFragment())
+                    .addToBackStack(null)
+                    .setReorderingAllowed(true)
+                    .commit();
+        });
+        binding.systemButton.setOnClickListener(v -> Toast.makeText(requireContext(), "This section is under maintenance!", Toast.LENGTH_SHORT).show());
+        binding.logoutButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), LoginActivity.class)));
+    }
+
+    public void setDetails(Passenger passenger) {
+        binding.passengerName.setText(String.format("%s %s %s",
+                passenger.getFirstName(), passenger.getMiddleName(), passenger.getLastName()));
+        binding.passengerEmail.setText(passenger.getEmail());
+        binding.contactNum.setText(passenger.getPhone());
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }
