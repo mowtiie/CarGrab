@@ -136,6 +136,40 @@ public class Database extends SQLiteOpenHelper {
         return null;
     }
 
+    public Passenger getPassengerByID(int id) {
+        Passenger passenger = new Passenger();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM passengers WHERE passengerID = ?", new String[]{String.valueOf(id)});
+
+        if (cursor.moveToFirst()) {
+            passenger.setPassengerID(cursor.getInt(cursor.getColumnIndexOrThrow("passengerID")));
+            passenger.setFirstName(cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
+            passenger.setMiddleName(cursor.getString(cursor.getColumnIndexOrThrow("middleName")));
+            passenger.setLastName(cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
+            passenger.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+            passenger.setPassword(cursor.getString(cursor.getColumnIndexOrThrow("password")));
+            passenger.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
+        }
+        cursor.close();
+        db.close();
+        return passenger;
+    }
+
+    public void editPassenger(int passengerID, String fName, String mName, String lName, String email, String password, String phone) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("firstName", fName);
+        values.put("middleName", mName);
+        values.put("lastName", lName);
+        values.put("email", email);
+        values.put("password", password);
+        values.put("phone", phone);
+
+        db.update("passengers", values, "passengerID = ?", new String[]{String.valueOf(passengerID)});
+        db.close();
+    }
+
     public Driver loginDriver(String email, String password) {
         Driver driver = new Driver();
         SQLiteDatabase database = getReadableDatabase();
